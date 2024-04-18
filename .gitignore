@@ -1,0 +1,16 @@
+# environment files, settings, ...
+.vscode
+.env
+.env.local
+.env.*.local
+
+# Logs
+log/
+.log
+*.log
+
+# Temporary files
+.temp
+.cache
+temp/
+tmp/
