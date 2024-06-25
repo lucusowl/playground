@@ -55,6 +55,115 @@ exit # 로그아웃
 
 ### 네트워크 설정
 
+유선 연결이면 자동으로 연결됨  
+연결이 되지 않거나 무선 연결과 같이 네트워크 설정이 필요하다면 진행
+
+1. 네트워크 연결 확인
+
+   1) 현재 연결되어 있는 인터페이스 확인
+      ```sh
+      ls /sys/class/net
+      # lo, eno0, eth0, wlan0, ...
+      # linux NIC 종류 참고
+      
+      ip link
+      # 각 인터페이스 세부 정보 확인
+      ```
+      무선 연결을 원할 경우, `w`로 시작하는 인터페이스명이 있어야 합니다
+
+   2) 네트워크 연결이 되는 지 확인
+      ```sh
+      # 1) 인터페이스 연결 정보 확인
+      ip a # ifconfig 명령어와 유사
+      # 해당 NIC에 inet ... 내용과 함께 출력되면 연결성공
+
+      # 2) 라우팅 테이블 내용 확인
+      ip route # route 명령어와 유사
+      # ip 주소와 함께 네트워크 연결된 NIC 내용이 출력되면 연결성공
+
+      # 3) 네트워크에 직접 연결 확인
+      ping {ip-address} # 연결하고자 하는 네트워크 IP주소에 ping
+      ```
+
+      외부망 연결 확인
+      ```sh
+      ping 8.8.8.8
+      # google DNS server 에 ping 연결 시도
+      # ping이 수신된다면 연결 성공
+
+      # NIC가 두 개 이상 연결되어 있다면, "-I {NIC}" 로 지정
+      # e.g. > ping -I wlan1 8.8.8.8
+      ```
+
+2. 네트워크 설정 변경
+
+   `networkd` 또는 `NetworkManager`를 직접 설정하는 방법도 있지만  
+   `Netplan`으로 구성하는 방법이 가장 간편하여 권장  
+
+   1) 네트워크 설정 변경
+      ```sh
+      # 출력된 설정파일 선택해 수정
+      ls /etc/netplan # e.g. 50-cloud-init.yaml
+      sudo vim /etc/netplan/{file-name}
+      ```
+
+      아래의 내용을 참고하여 파일 내용을 수정 (`#`뒤 내용은 주석이므로 삭제하여도 무방)
+      ```yaml
+      network:
+        ethernets: # ethernet devices
+          eth0:
+            dhcp4: true
+            optional: true
+        wifis: # wireless devices
+          wlan0:
+            access-points:
+              "{wifi-ssid}":
+                password: "{wifi-password}"
+                hidden: true # wifi SSID가 숨김일 경우
+            dhcp4: true # 자동 IP 할당여부
+            optional: true
+        version: 2
+        renderer: NetworkManager # 기본 networkd가 아닌 NetworkManager 으로 설정
+      ```
+
+      구체적인 netplan 구성 및 추가설정은 [공식문서](https://netplan.readthedocs.io/en/stable/howto/)를 참고
+
+   2) 변경된 네트워크 설정 적용
+      ```sh
+      # sudo netplan try # apply test
+      sudo netplan apply
+      ```
+
+      설정을 적용하고 네트워크에 정상적으로 연결되는 지 확인
+
+   3) (선택) 네트워크 툴 설치
+
+      라즈베리파이 제공 ubuntu 22.04에서는 NetworkManager가 기본 설치되어 있지 않으므로  
+      `NetworkManager` 설치 권장(본인이 많이 사용하는 네트워크 툴이 있다면 해당 툴 설치)  
+      ```sh
+      sudo apt install network-manager
+      ```
+
+#### 부팅시 자동 무선 네트워크 탐색 해제/설정
+
+```
+[***   ] A start job is running for wait for network to be configured (0s / no limit)
+```
+위 메세지가 뜨며 부팅시 네트워크 연결에 오랜 시간 대기하는 경우가 있음  
+이를 해제하여 부팅 후 수동연결을 원할 경우
+```sh
+# Network connection에서 기다리지 않게 비활성화 설정
+sudo systemctl disable systemd-networkd-wait-online.service
+# 다른 서비스에 의해 서비스가 활성화되지 않게 mask 설정
+sudo systemctl mask systemd-networkd-wait-online.service
+```
+
+반대로 다시 설정하고자 한다면 역으로 진행
+```sh
+sudo systemctl unmask systemd-networkd-wait-online.service # mask 풀기
+sudo systemctl enable systemd-networkd-wait-online.service # 서비스 활성화
+```
+
 ### 패키지 업데이트
 
 설치된(기본제공되는) 프로그램들의 기능/보안 사항을 최신상태로 업데이트  
@@ -126,6 +235,10 @@ sudo apt autoclean # 저장소에 더이상 없거나, 불완전하게 다운로
 
 - [configuring_basic_system_settings, redhat.com, RHEL 8 documentation, Accessed:240418](https://access.redhat.com/documentation/ko-kr/red_hat_enterprise_linux/8/html-single/configuring_basic_system_settings/index)
 - [Ubnutu 22.03 Server 초기설정, tistory blog, 220602, Accessed:240418](https://zosystem.tistory.com/323)
+- [Configure networking with Netplan, tutorial, 231220, Accessed:240421](https://vitux.com/how-to-configure-networking-with-netplan-on-ubuntu/)
+- [How to install Ubuntu On Your Raspberry Pi, tutorial, Accessed:240421](https://ubuntu.com/tutorials/how-to-install-ubuntu-on-your-raspberry-pi)
+- [Obsoleted net-tools programs overview, The Linux Foundation Wiki,  210821, Accessed:240421](https://wiki.linuxfoundation.org/networking/net-tools)
+- [How to configure your computer to connect to your home Wi-Fi network, Netplan Documentation, Accessed:240421](https://netplan.readthedocs.io/en/stable/examples/#how-to-configure-your-computer-to-connect-to-your-home-wi-fi-network)
 
 [^1]: 서버구축과 같이 GUI환경이 필요로 하지 않는 환경도 포함하기 위함. GUI,TUI와 같은 환경에서는 제시한 작업목록을 참고하여 진행  
 [^2]: "Authentication failure"가 뜨면서 서비스가 거부될 것  
