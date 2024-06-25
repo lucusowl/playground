@@ -174,7 +174,7 @@ sudo systemctl enable systemd-networkd-wait-online.service # 서비스 활성화
 기본 저장소 위치[^3]가 다운로드하는 지역과 멀 경우, 업데이트하는 데에 시간이 오래 걸림  
 빠르게 업데이트하기 원할 경우, 가까운 저장소 미러 주소로 변경
 
-우리나라로 등록된 저장소 미러 주소는 <https://launchpad.net/ubuntu/+archivemirrors> 에서 확인가능
+대한민국으로 등록된 저장소 미러 주소는 <https://launchpad.net/ubuntu/+archivemirrors> 에서 확인가능
 
 - mirror.kakao.com, 카카오, 많이 설정하는 편
 - ftp.kaist.ac.kr, 카이스트, 속도는 빠르지만 접속자가 많은 편
