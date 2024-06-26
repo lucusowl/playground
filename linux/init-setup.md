@@ -220,6 +220,67 @@ sudo apt autoclean # 저장소에 더이상 없거나, 불완전하게 다운로
 
 ### 시스템 시간 동기화
 
+네트워킹 포함 프로그램 사용에 있어 정확한 시간 유지는 매우 중요
+
+- 시간대 TimeZone 확인 및 변경
+
+  ```sh
+  # 시간대 확인
+  timedatectl # 설정된 시간대 확인
+
+  # 시간대를 변경하고 싶은 경우
+  timedatectl list-timezones | grep -i seoul # 원하는 시간대 존재 확인
+  timedatectl set-timezone 'Asia/Seoul' # 시간대 변경
+  ```
+
+- 컴퓨터 시간 확인 및 변경
+
+  Time Server로부터 NTP[^4]로 기준시각을 불러와 현 컴퓨터에 적용
+
+  `rdate` 패키지 필요
+  ```sh
+  sudo apt install rdate
+  ```
+
+  ```sh
+  # 컴퓨터 시간 확인
+  date # 운영체제 시간 확인
+  # hwclock # 하드웨어 시간 확인
+
+  # (선택) 수동 변경
+  timedatectl set-ntp 0 # 운영체제 시간 동기화 해제
+  date -s "1970-01-01 12:00:00" # 운영체제 시간 수동설정
+  # timedatectl set-ntp 1 # 운영체제 시간 동기화 활성화
+
+  # 시간 동기화
+  # {timeserver}는 Time Server의 주소, 대표 주소는 아래에 리스트
+  rdate -p {timeserver} # time server의 현재 시간 확인
+  rdate -s {timeserver} # time server 시간 -> 운영체제 시간에 동기화
+  # hwclock -w # 운영체제 시간 -> 하드웨어 시간 동기화
+
+  # (참고)
+  # hwclock -s # 하드웨어 시간 -> 운영체제 시간 동기화
+  ```
+
+  Time Server 주소 리스트
+  - time.bora.net    : LG U+
+  - time.nist.gov    : NIST ITS
+  - time.kriss.re.kr : 한국표준과학연구원(KRISS)
+  - time.windows.net : Microsoft NTP
+  - time.google.com  : Google Public NTP
+
+  보다 정확한 시간운용이 목표라면
+  스케줄에 추가하여 **주기적으로 동기화**
+
+  ```sh
+  crontab -e
+  # 편집기가 열리면 아래의 내용을 입력
+  ```
+  ```
+  # 매주 일요일 0시 0분에 시간 동기화
+  0 0 * * 0 rdate -s {timeserver} && hwclock -w &> /dev/null
+  ```
+
 ### SSH 원격 연결 활성화
 
 유지보수 및 추가 개발을 위해 최소한 관리자 용도로라도 원격으로 연결할 수 있게 설정
@@ -242,3 +303,4 @@ sudo apt autoclean # 저장소에 더이상 없거나, 불완전하게 다운로
 [^1]: 서버구축과 같이 GUI환경이 필요로 하지 않는 환경도 포함하기 위함. GUI,TUI와 같은 환경에서는 제시한 작업목록을 참고하여 진행  
 [^2]: "Authentication failure"가 뜨면서 서비스가 거부될 것  
 [^3]: 위치를 한국으로 설정하면 초기 기본 주소: kr.archive.ubuntu.com, 카이스트 서버  
+[^4]: Network Time Protocol, 컴퓨터간의 시간을 동기화하는 네트워크 프로토콜
