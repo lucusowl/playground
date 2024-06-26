@@ -9,7 +9,7 @@ CLI환경에서의 작업으로 서술[^1]
 3. [네트워크 설정](#네트워크-설정)
 4. [패키지 업데이트](#패키지-업데이트)
 5. [시스템 시간 동기화](#시스템-시간-동기화)
-6. [SSH 원격 연결 활성화](#ssh-원격-연결-활성화)
+6. [(선택) SSH 원격 연결 활성화](#선택-ssh-원격-연결-활성화)
 7. [(선택) 기타 편의 설정](#선택-기타-편의-설정)
    1. 키보드 레이아웃
    2. 시스템 언어 & 로케일
@@ -281,9 +281,74 @@ sudo apt autoclean # 저장소에 더이상 없거나, 불완전하게 다운로
   0 0 * * 0 rdate -s {timeserver} && hwclock -w &> /dev/null
   ```
 
-### SSH 원격 연결 활성화
+### (선택) SSH 원격 연결 활성화
 
-유지보수 및 추가 개발을 위해 최소한 관리자 용도로라도 원격으로 연결할 수 있게 설정
+유지보수 및 추가 개발을 위해 원격으로 연결할 수 있게 설정
+
+그러나  
+SSH 서버를 열어 다른 컴퓨터에서 접속할 수 있게 하는 것은 보안적으로 위험에 노출되는 것이므로  
+보안에 주의하여 활성화할 것을 권장
+
+1. SSH 서비스 실행 중인 지 확인
+
+   SSH 서버로서 서비스를 실행시키기 위해 `openssh-server`패키지가 있는 지 확인  
+   서버용 OS일 경우(e.g. "Ubuntu Server"), 기본 패키징되어 있을 가능성이 높음  
+   ```sh
+   # ssh server 패키지가 있는 지 확인
+   apt --installed list | grep openssh-server
+
+   # 패키지가 없다면 설치
+   sudo apt install openssh-server # 설치
+   # 설치 완료후, 자동으로 SSH 서버 서비스 시작됨
+   ```
+
+   SSH 서비스가 실행 중인지 확인
+   ```sh
+   sudo systemctl status ssh
+
+   # ● ssh.service - OpenBSD Secure Shell server
+   # ...
+   ```
+   결과에 `Active: active (running) ...` 가 있다면 **SSH 서비스가 정상 동작** 중, 원격 연결이 가능한 상태  
+   `inactive`라면 `sudo systemctl start ssh`로 서비스 실행  
+
+   (참고) 추가적으로 SSH 서비스 관리 명령어
+   ```sh
+   sudo systemctl stop ssh # 서비스 중지
+   sudo systemctl start ssh # 서비스 시작
+   sudo systemctl disable --now ssh # 비활성화, 부팅후에도 시작되지 않음
+   sudo systemctl enable --now ssh # 활성화
+   ```
+
+2. 기본 SSH 방화벽 설정
+
+   이제 서버로서 동작기능을 하기에 보안과 자원관리를 위해 SSH만 방화벽을 열어둘 것  
+   ```sh
+   # 현재 방화벽 확인
+   sudo ufw status
+   # "Status: inactive" 라면 방화벽이 비활성화 상태
+   # 방화벽 활성화
+   sudo ufw enable
+   ```
+
+   ```sh
+   # 방화벽, SSH 허용
+   sudo ufw allow ssh
+
+   # 방화벽 설정 적용
+   sudo ufw reload
+   ```
+
+3. 원격 연결 확인
+
+   다른 컴퓨터에서 터미널에서 아래 명령어 입력[^5]  
+   ```sh
+   ssh {계정명}@{현 컴퓨터 주소}
+   # 비밀번호 입력하고 로그인 되는 지 확인
+   ```
+
+이제부터 원격접속이 가능하기에 정보 보안도 각별히 챙길 것
+``
 
 ### (선택) 기타 편의 설정
 
@@ -304,3 +369,4 @@ sudo apt autoclean # 저장소에 더이상 없거나, 불완전하게 다운로
 [^2]: "Authentication failure"가 뜨면서 서비스가 거부될 것  
 [^3]: 위치를 한국으로 설정하면 초기 기본 주소: kr.archive.ubuntu.com, 카이스트 서버  
 [^4]: Network Time Protocol, 컴퓨터간의 시간을 동기화하는 네트워크 프로토콜
+[^5]: 해당 컴퓨터에 SSH 프로토콜을 처리하는 터미널(e.g. PuTTY)이나 openssh-client가 설치되어 있는 환경에서 진행
