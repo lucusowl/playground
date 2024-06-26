@@ -86,7 +86,7 @@ exit # 로그아웃
 
       외부망 연결 확인
       ```sh
-      ping 8.8.8.8
+      ping 8.8.8.8 -c 5 # 5번만 송신
       # google DNS server 에 ping 연결 시도
       # ping이 수신된다면 연결 성공
 
