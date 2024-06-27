@@ -10,7 +10,8 @@ log/
 *.log
 
 # Temporary files
-.temp
-.cache
-temp/
-tmp/
+**/.temp
+**/.cache
+**/temp/
+**/tmp/
+**/tmp*
