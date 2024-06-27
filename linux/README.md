@@ -10,3 +10,7 @@
 ## Init Setup
 
 - [초기 설정 작업(공통)](init-setup.md)
+
+## Commands
+
+- [기본 명령 모음](basic-commands.md)
